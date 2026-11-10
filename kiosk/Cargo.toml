@@ -17,6 +17,13 @@ qrcode = { version = "0.14", default-features = false }
 [build-dependencies]
 slint-build = "=1.18.1"
 
+# Full debug info for Slint/Skia made each debug binary ~400 MB (target/ grew to 21 GB).
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [profile.release]
 opt-level = "s"
 lto = true
