@@ -202,15 +202,19 @@ impl Cart {
     }
 
     pub fn total(&self, price: impl Fn(&Part) -> f64) -> f64 {
-        self.items.iter().map(|(p, q)| price(p) * *q as f64).sum::<f64>()
+        cents(self.items.iter().map(|(p, q)| price(p) * *q as f64).sum::<f64>()
             + self.prints.iter().map(Print::price).sum::<f64>()
             + self.times.iter().map(ToolTime::price).sum::<f64>()
-            + self.top_up()
+            + self.raw_top_up())
     }
 
     /// What prints and machine time together miss to reach the minimum per payment
     /// (bank costs): the highest minimum among them. Drinks and products do not count.
     pub fn top_up(&self) -> f64 {
+        cents(self.raw_top_up())
+    }
+
+    fn raw_top_up(&self) -> f64 {
         let minimum = self.prints.iter().map(|p| p.minimum).chain(self.times.iter().map(|t| t.minimum)).fold(0.0, f64::max);
         let raw = self.prints.iter().map(Print::price).sum::<f64>() + self.times.iter().map(ToolTime::price).sum::<f64>();
         (minimum - raw).max(0.0)
@@ -243,9 +247,25 @@ impl Cart {
     }
 }
 
+/// Python's `round(x, 2)` (core/checkout.py): the exact binary value, ties to even. Rust's `{:.2}` does the same.
+fn cents(x: f64) -> f64 {
+    format!("{x:.2}").parse().unwrap_or(x)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Cases from Stock-management-frontend/tests/contract/pricing-cases.json (total_rounded_to_cents + Python rounding).
+    #[test]
+    fn total_and_top_up_round_to_cents_like_python() {
+        let c = Cart { items: vec![(part(4), 3)], ..Default::default() };
+        assert_eq!(c.total(|_| 0.333), 1.0);   // raw 0.999
+        assert_eq!(cents(0.125), 0.12);        // exact tie: Python rounds to even
+        assert_eq!(cents(0.375), 0.38);
+        assert_eq!(cents(2.675), 2.67);        // binary value is below the tie
+        assert_eq!(cents(0.0), 0.0);
+    }
 
     fn part(pk: i64) -> Part {
         Part { pk, name: format!("P{pk}"), ..Default::default() }
