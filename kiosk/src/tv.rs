@@ -1,4 +1,4 @@
-//! Link to the TV page (Tv-Presentation, hooks/useTvPage.ts), which runs in
+//! Link to the TV page (htl-tv, hooks/useTvPage.ts), which runs in
 //! Chromium on this same Pi. The Python version pressed keys in that
 //! browser with xdotool; under Wayland that no longer works, and a key
 //! would land in the focused window anyway. Instead the page connects to a

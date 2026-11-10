@@ -5,7 +5,7 @@
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$DIR/kiosk/interface-stock"
-URL=https://github.com/maakleerplek/Interface-stock/releases/download/kiosk-latest/interface-stock
+URL=https://github.com/maakleerplek/htl-kiosk/releases/download/kiosk-latest/interface-stock
 if ! curl -fsSL --retry 3 -o "$BIN.new" "$URL"; then
     rm -f "$BIN.new"; echo "Kiosk download failed: keeping the current one."; exit 0
 fi

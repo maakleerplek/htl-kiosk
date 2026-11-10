@@ -5,7 +5,7 @@ set -e
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 chmod +x "$INSTALL_DIR/scripts/kiosk-watchdog.sh"
-sed "s|/home/pi/Interface-stock|${INSTALL_DIR}|g" "$INSTALL_DIR/systemd/kiosk-watchdog.service" \
+sed "s|/home/pi/htl-kiosk|${INSTALL_DIR}|g" "$INSTALL_DIR/systemd/kiosk-watchdog.service" \
     | sudo tee /etc/systemd/system/kiosk-watchdog.service > /dev/null
 sudo cp "$INSTALL_DIR/systemd/kiosk-watchdog.timer" /etc/systemd/system/kiosk-watchdog.timer
 

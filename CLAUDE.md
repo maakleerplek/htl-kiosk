@@ -1,6 +1,6 @@
-# Interface-stock — map for Claude
+# htl-kiosk — map for Claude
 
-The self-service till at the HTL: a Pi 3A+ (`pi@10.72.3.105`, hostname `interface-stock`) with the 7" Touch Display 2 running the kiosk (`kiosk/`, Rust + Slint) and a TV on HDMI showing the Tv-Presentation page in Chromium. Pi OS Lite Trixie 32-bit + labwc, SD card read-only (overlay). Setup/recovery: README.md.
+The self-service till at the HTL: a Pi 3A+ (`pi@10.72.3.105`, hostname `interface-stock`) with the 7" Touch Display 2 running the kiosk (`kiosk/`, Rust + Slint) and a TV on HDMI showing the htl-tv page in Chromium. Pi OS Lite Trixie 32-bit + labwc, SD card read-only (overlay). Setup/recovery: README.md.
 
 ## Where things are
 | What | File |
@@ -10,7 +10,7 @@ The self-service till at the HTL: a Pi 3A+ (`pi@10.72.3.105`, hostname `interfac
 | InvenTree REST (lookups, stock, prices, booking) | `kiosk/src/inventree.rs`; offline/unknown stock: `backend.rs` |
 | Barcode scanner / RFID (keyboard mode) | `kiosk/src/scanner.rs` (scan debounce in `lib.rs`) |
 | Payment QR (EPC/Wero) | `kiosk/src/payment.rs` |
-| Link to the TV page | `kiosk/src/tv.rs` (other side: Tv-Presentation `hooks/useTvPage.ts`) |
+| Link to the TV page | `kiosk/src/tv.rs` (other side: htl-tv `hooks/useTvPage.ts`) |
 | UI screens / colours + fonts | `kiosk/ui/app.slint` / `kiosk/ui/tokens.slint` |
 | Demo shop data | `kiosk/demo-data/`, `kiosk/tools/fetch_demo_data.py` |
 | Pi setup, overlay, health line | `pi/setup.sh`, `pi/overlay.sh`, `pi/health.sh`, `pi/labwc/` |

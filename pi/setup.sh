@@ -1,8 +1,8 @@
 #!/bin/bash
-# Turns a fresh Raspberry Pi OS Lite (Trixie, 32-bit) card into the Interface-stock
+# Turns a fresh Raspberry Pi OS Lite (Trixie, 32-bit) card into the htl-kiosk
 # kiosk: touch kiosk on the Touch Display, TV page in Chromium on the TV.
 # Flash with pi/user-data on the boot partition (see README, Recovery), then on the Pi:
-#   sudo apt-get install -y git && git clone https://github.com/maakleerplek/Interface-stock ~/Interface-stock && ~/Interface-stock/pi/setup.sh
+#   sudo apt-get install -y git && git clone https://github.com/maakleerplek/htl-kiosk ~/htl-kiosk && ~/htl-kiosk/pi/setup.sh
 # and put back .env and barcode_cache.json from the backup. Safe to run again.
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -34,7 +34,7 @@ sudo install -m 644 "$DIR/pi/sysctl.conf" /etc/sysctl.d/90-kiosk.conf
 
 echo "--- Timers: TV on/off, watchdog, auto-deploy every 5 min; touch retry at boot"
 for unit in tv-on tv-off; do
-    sed "s|/home/pi/Interface-stock|$DIR|g" "$DIR/systemd/$unit.service" | sudo tee /etc/systemd/system/$unit.service > /dev/null
+    sed "s|/home/pi/htl-kiosk|$DIR|g" "$DIR/systemd/$unit.service" | sudo tee /etc/systemd/system/$unit.service > /dev/null
     sudo cp "$DIR/systemd/$unit.timer" /etc/systemd/system/
 done
 sed -e "s|__INSTALL_DIR__|$DIR|g" -e "s|__USER__|$(whoami)|g" "$DIR/systemd/auto-update.service" \
@@ -48,7 +48,7 @@ bash "$DIR/scripts/install-watchdog.sh"
 
 echo "--- Settings backup: htl-server may fetch these files, nothing else (pi-kiosk-backup)"
 mkdir -p ~/.ssh
-grep -q pi-kiosk-backup ~/.ssh/authorized_keys 2>/dev/null || echo 'restrict,command="tar czf - --ignore-failed-read -C / home/pi/Interface-stock/.env home/pi/Interface-stock/barcode_cache.json boot/firmware/config.txt boot/firmware/cmdline.txt" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8uz0G1zaRxhi9JklTnuC5gb4WU8hm4VwX1dM3gG3DV htl-server pi-kiosk-backup' >> ~/.ssh/authorized_keys
+grep -q pi-kiosk-backup ~/.ssh/authorized_keys 2>/dev/null || echo 'restrict,command="tar czf - --ignore-failed-read -C / home/pi/htl-kiosk/.env home/pi/htl-kiosk/barcode_cache.json boot/firmware/config.txt boot/firmware/cmdline.txt" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK8uz0G1zaRxhi9JklTnuC5gb4WU8hm4VwX1dM3gG3DV htl-server pi-kiosk-backup' >> ~/.ssh/authorized_keys
 
 echo "--- Health log: htl-server may run pi/health.sh, nothing else (log ~/pi-health.log on htl-server)"
 grep -q pi-health ~/.ssh/authorized_keys 2>/dev/null || echo "restrict,command=\"$DIR/pi/health.sh\" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPMs49zTVVBNjbkSdrWfKNYSuDSFpbIB9Otkj0X5DoqA htl-server pi-health" >> ~/.ssh/authorized_keys

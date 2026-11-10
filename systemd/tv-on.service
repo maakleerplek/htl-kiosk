@@ -3,4 +3,4 @@ Description=Turn TV on via HDMI-CEC
 
 [Service]
 Type=oneshot
-ExecStart=/home/pi/Interface-stock/scripts/tv-on.sh
+ExecStart=/home/pi/htl-kiosk/scripts/tv-on.sh

@@ -1,5 +1,5 @@
 [Unit]
-Description=Interface-stock auto-update
+Description=htl-kiosk auto-update
 
 [Service]
 Type=oneshot

@@ -256,7 +256,7 @@ fn cents(x: f64) -> f64 {
 mod tests {
     use super::*;
 
-    /// Cases from Stock-management-frontend/tests/contract/pricing-cases.json (total_rounded_to_cents + Python rounding).
+    /// Cases from htl-stock/tests/contract/pricing-cases.json (total_rounded_to_cents + Python rounding).
     #[test]
     fn total_and_top_up_round_to_cents_like_python() {
         let c = Cart { items: vec![(part(4), 3)], ..Default::default() };

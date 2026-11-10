@@ -1,6 +1,6 @@
 #!/bin/bash
 # The TV page in Chromium on the TV (HDMI-A-1), from pi/labwc/autostart.
-# URL: TV_PRESENTATION_URL in ~/Interface-stock/.env.
+# URL: TV_PRESENTATION_URL in ~/htl-kiosk/.env.
 
 flags=(
    # Raspberry Pi's chromium wrapper (since 153, Sept 2026) asks "not recommended

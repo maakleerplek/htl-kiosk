@@ -1,5 +1,5 @@
 [Unit]
-Description=Interface-stock auto-deploy every 5 minutes
+Description=htl-kiosk auto-deploy every 5 minutes
 
 [Timer]
 OnCalendar=*:0/5

@@ -70,7 +70,7 @@ if [ "${on_at:-0}" -gt "${off_at:-0}" ] && [ -e /dev/cec0 ]; then
 fi
 
 # --- 4. TV page --------------------------------------------------------------
-URL=$(sed -n 's/^TV_PRESENTATION_URL=//p' /home/pi/Interface-stock/.env | tr -d '"')
+URL=$(sed -n 's/^TV_PRESENTATION_URL=//p' "$(dirname "$0")/../.env" | tr -d '"')
 if ! curl -sf -o /dev/null --max-time 15 "$URL"; then
     rm -f "$STATE/blank"   # server down: not something a refresh fixes
     exit 0

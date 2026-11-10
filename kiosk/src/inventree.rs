@@ -30,7 +30,7 @@ pub struct InvenTreeConfig {
     pub cache_file: PathBuf,
     pub image_dir: PathBuf,
     pub htl_name: String,
-    /// Tv-Presentation, for the "recent activity" changelog.
+    /// htl-tv, for the "recent activity" changelog.
     pub tv_url: Option<String>,
     /// Categories that are never shown in the grid.
     pub hidden_categories: Vec<String>,
@@ -187,7 +187,7 @@ pub fn removal_payload(lines: &[(i64, f64)], volunteer: bool, htl_name: &str) ->
 const TILL_CUSTOMER: &str = "Walk-in customer";
 const PRINT_PRICE_TEMPLATE: &str = "3D-print prijs per gram";
 const MINIMUM_TEMPLATE: &str = "Minimum";
-/// Category of the machine parts (Tv-Presentation's INVENTREE_MACHINE_CATEGORY).
+/// Category of the machine parts (htl-tv's INVENTREE_MACHINE_CATEGORY).
 const MACHINE_CATEGORY: &str = "machinegebruik";
 
 /// One 3D print as a sales-order extra line. `price` is its share of the payment
