@@ -40,7 +40,7 @@ def get_all(path):
 
 # Cheapest-quantity sale price break per part, as refresh_sale_prices does.
 best = {}
-for b in get_all("/api/part/sale-price/?limit=500"):
+for b in get_all("/api/pricing/sale-price/?limit=500"):
     qty, price = float(b["quantity"]), float(b["price"])
     if b["part"] not in best or qty < best[b["part"]][0]:
         best[b["part"]] = (qty, price)

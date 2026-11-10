@@ -324,7 +324,7 @@ impl Shared {
     fn refresh(&self) -> Result<(), String> {
         // Cheapest-quantity sale price break per part, as refresh_sale_prices did.
         let mut best: HashMap<i64, (f64, f64)> = HashMap::new();
-        for b in self.get_all("/api/part/sale-price/?limit=500")? {
+        for b in self.get_all("/api/pricing/sale-price/?limit=500")? {
             let (Some(part), Some(qty), Some(price)) =
                 (b.get("part").and_then(Value::as_i64), b.get("quantity").and_then(num), b.get("price").and_then(num))
             else {

@@ -118,7 +118,7 @@ def main():
                     "salable": True, "purchaseable": True, "component": False,
                     "minimum_stock": 0, "description": name,
                 })
-                post("part/sale-price/", {"part": part["pk"], "quantity": 1, "price": price, "price_currency": "EUR"})
+                post("pricing/sale-price/", {"part": part["pk"], "quantity": 1, "price": price, "price_currency": "EUR"})
                 stock = {"part": part["pk"], "location": loc, "quantity": qty}
                 if cost is not None:
                     stock.update(purchase_price=cost, purchase_price_currency="EUR")
