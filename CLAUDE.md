@@ -22,3 +22,14 @@ The self-service till at the HTL: a Pi 3A+ (`pi@10.72.3.105`, hostname `interfac
 - Tests: `cd kiosk && cargo test` (`tests/ui.rs` = headless tap-through).
 - CI builds armhf → GitHub release `kiosk-latest`; the Pi fetches it (`pi/fetch-kiosk.sh`) via `scripts/autodeploy.sh` + `deploy.sh` every 5 min. Push to master = production.
 - Not in git: `.env` (InvenTree token, payment), `barcode_cache.json` → weekly backup to SharePoint `Stock-keeping/Pi-kiosk-backup/`.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- When graphify-out/graph.json exists, run `graphify query "<question>"` before your first grep, search or source-file read for a codebase question, and put this rule in every subagent prompt that explores code. Read raw files only for lines the graph or an earlier read already located. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- A committed graphify-out/graph.json is rewritten whole on every build, so a large diff to it in a pull request is expected. Do not flag it as churn or suggest skipping the graph rebuild or its hooks.
