@@ -20,6 +20,9 @@ const LASER_POLL: Duration = Duration::from_secs(5);
 const MISS_TTL: Duration = Duration::from_secs(60);
 /// The barcode cache is written to the SD card at most this often.
 const CACHE_DEBOUNCE: Duration = Duration::from_secs(10);
+/// The last good catalog is written to the SD card at most this often, so a
+/// kiosk restarted while InvenTree is down still knows its parts and prices.
+const CATALOG_SAVE: Duration = Duration::from_secs(3600);
 
 pub struct InvenTreeConfig {
     pub url: String,
@@ -101,15 +104,7 @@ impl BarcodeCache {
         if !self.dirty || (!force && self.saved.elapsed() < CACHE_DEBOUNCE) {
             return;
         }
-        let tmp = self.path.with_extension("json.tmp");
-        let write = || -> std::io::Result<()> {
-            use std::io::Write;
-            let mut f = std::fs::File::create(&tmp)?;
-            f.write_all(serde_json::to_string(&self.map)?.as_bytes())?;
-            f.sync_all()?;
-            std::fs::rename(&tmp, &self.path)
-        };
-        match write() {
+        match write_atomic(&self.path, &serde_json::to_vec(&self.map).unwrap_or_default()) {
             Ok(()) => {
                 self.dirty = false;
                 self.saved = Instant::now();
@@ -119,7 +114,17 @@ impl BarcodeCache {
     }
 }
 
-#[derive(Default)]
+/// Write via a temp file, so a power cut never leaves half a file.
+fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    let tmp = path.with_extension("json.tmp");
+    let mut f = std::fs::File::create(&tmp)?;
+    f.write_all(bytes)?;
+    f.sync_all()?;
+    std::fs::rename(&tmp, path)
+}
+
+#[derive(Default, serde::Serialize, serde::Deserialize)]
 struct Catalog {
     items: Vec<CatalogItem>,
     /// Every active part, also those without a sale price.
@@ -131,7 +136,19 @@ struct Catalog {
     print_prices: HashMap<i64, f64>,
     /// Least a job costs per machine part (parameter "Minimum", as on the TV).
     minimums: HashMap<i64, f64>,
+    /// True after a load from InvenTree; a catalog read from disk stays false.
+    #[serde(skip)]
     loaded: bool,
+}
+
+impl Catalog {
+    fn path(cfg: &InvenTreeConfig) -> PathBuf {
+        cfg.cache_file.with_file_name("catalog_cache.json")
+    }
+
+    fn load(path: &Path) -> Self {
+        std::fs::read(path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()
+    }
 }
 
 struct Shared {
@@ -142,6 +159,8 @@ struct Shared {
     misses: Mutex<HashMap<String, Instant>>,
     category_names: Mutex<HashMap<i64, String>>,
     refresh_now: AtomicBool,
+    /// When the catalog was last written to disk (None = not yet this run).
+    catalog_saved: Mutex<Option<Instant>>,
     /// Open laser timer sessions, polled every few seconds.
     laser: RwLock<Vec<LaserSession>>,
     /// Sold laser sessions not marked paid on the laser service yet: (session id, order).
@@ -376,6 +395,13 @@ impl Shared {
         }
         cat.items.sort_by(|a, b| (&a.category, &a.part.name).cmp(&(&b.category, &b.part.name)));
         eprintln!("[inventree] {} parts, {} for sale", cat.parts.len(), cat.items.len());
+        let mut saved = self.catalog_saved.lock().unwrap();
+        if saved.is_none_or(|t| t.elapsed() >= CATALOG_SAVE) {
+            match serde_json::to_vec(&cat).map_err(std::io::Error::from).and_then(|b| write_atomic(&Catalog::path(&self.cfg), &b)) {
+                Ok(()) => *saved = Some(Instant::now()),
+                Err(e) => eprintln!("[cache] could not write the catalog: {e}"),
+            }
+        }
         *self.catalog.write().unwrap() = cat;
         Ok(())
     }
@@ -619,14 +645,16 @@ impl InvenTree {
             .build()
             .into();
         let cache = Mutex::new(BarcodeCache::load(cfg.cache_file.clone()));
+        let catalog = RwLock::new(Catalog::load(&Catalog::path(&cfg)));
         let sh = Arc::new(Shared {
             cfg,
             agent,
-            catalog: Default::default(),
+            catalog,
             cache,
             misses: Default::default(),
             category_names: Default::default(),
             refresh_now: AtomicBool::new(true),
+            catalog_saved: Default::default(),
             laser: Default::default(),
             laser_unmarked: Default::default(),
         });
@@ -903,6 +931,21 @@ mod tests {
         assert_eq!(results(json!([1, 2])).len(), 2);
         assert_eq!(results(json!({"count": 1, "results": [1]})).len(), 1);
         assert!(results(json!({"detail": "nope"})).is_empty());
+    }
+
+    #[test]
+    fn catalog_roundtrips_without_loaded() {
+        let dir = std::env::temp_dir().join(format!("kiosk-cat-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("catalog_cache.json");
+        let mut cat = Catalog { loaded: true, ..Default::default() };
+        cat.prices.insert(7, 1.5);
+        write_atomic(&path, &serde_json::to_vec(&cat).unwrap()).unwrap();
+        let back = Catalog::load(&path);
+        assert_eq!(back.prices.get(&7), Some(&1.5));
+        assert!(!back.loaded);
+        assert!(Catalog::load(&dir.join("missing.json")).prices.is_empty());
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
