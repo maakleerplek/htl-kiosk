@@ -29,12 +29,15 @@ new=$(git rev-parse origin/master)
 [ "$old" = "$new" ] && exit 0
 [ "$(cat "$BAD" 2>/dev/null)" = "$new" ] && exit 0
 
-ci=$(curl -fsS "https://api.github.com/repos/$REPO/commits/$new/check-runs?per_page=100" | python3 -c '
+# Optional read-only GitHub token (Checks: read) in ~/.autodeploy-token: without it the API
+# allows 60 requests per hour per IP, and every machine at the HTL shares one IP.
+auth=(); [ -r "$HOME/.autodeploy-token" ] && auth=(-H "Authorization: Bearer $(tr -d '[:space:]' < "$HOME/.autodeploy-token")")
+ci=$(curl -fsS "${auth[@]}" "https://api.github.com/repos/$REPO/commits/$new/check-runs?per_page=100" | python3 -c '
 import json, sys
 runs = json.load(sys.stdin)["check_runs"]
 if any(r["status"] != "completed" for r in runs): print("pending")
 elif any(r["conclusion"] not in ("success", "skipped", "neutral") for r in runs): print("failed")
-else: print("ok")') || { log "GitHub API unreachable"; exit 0; }
+else: print("ok")') || { log "GitHub API unreachable or rate-limited (token in ~/.autodeploy-token?)"; exit 0; }
 [ "$ci" = pending ] && exit 0
 if [ "$ci" = failed ]; then
     log "CI failed on ${new:0:7}: not deploying"; echo "$new" > "$BAD"; exit 0
